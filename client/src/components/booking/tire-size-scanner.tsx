@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Camera, CheckCircle, Loader2, ScanLine, Upload } from "lucide-react";
+import { createWorker } from "tesseract.js";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,73 +12,92 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-interface TireScanResult {
-  frontTire: string | null;
-  rearTire: string | null;
-  spare: string | null;
-  pressureFrontPsi: number | null;
-  pressureRearPsi: number | null;
-  rawText?: string;
+interface ScanResult {
+  sizes: string[];
+  pressuresPsi: number[];
 }
 
 interface TireSizeScannerProps {
   onTireSizeDetected: (tireSize: string) => void;
 }
 
+function parseTireSizes(text: string): ScanResult {
+  // Matches standard tire size codes: optional prefix + 3 digits / 2 digits + R/B/D + 2-3 digits
+  // e.g. P215/60R16, LT265/70R17, 215/60R16
+  const sizePattern = /\b(?:P|LT|ST|T|C)?(\d{3})\/(\d{2})[RBD](\d{2,3})\b/gi;
+  const sizeMatches = Array.from(text.matchAll(sizePattern)).map(m => m[0].toUpperCase());
+  const sizes = Array.from(new Set(sizeMatches));
+
+  // PSI values — look for numbers next to "PSI" or "psi"
+  const psiPattern = /(\d{2,3})\s*psi/gi;
+  const psiValues = Array.from(text.matchAll(psiPattern)).map(m => parseInt(m[1]));
+
+  // kPa values — convert to PSI (÷ 6.895)
+  const kpaPattern = /(\d{3})\s*kpa/gi;
+  const kpaValues = Array.from(text.matchAll(kpaPattern)).map(m =>
+    Math.round(parseInt(m[1]) / 6.895)
+  );
+
+  return {
+    sizes,
+    pressuresPsi: Array.from(new Set([...psiValues, ...kpaValues])),
+  };
+}
+
 export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [mimeType, setMimeType] = useState<string>("image/jpeg");
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<TireScanResult | null>(null);
+  const [progress, setProgress] = useState("");
+  const [result, setResult] = useState<ScanResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      // dataUrl is "data:<mimeType>;base64,<data>"
-      const [header, base64] = dataUrl.split(",");
-      const mime = header.replace("data:", "").replace(";base64", "");
-      setPreview(dataUrl);
-      setImageBase64(base64);
-      setMimeType(mime);
-      setResult(null);
-    };
-    reader.readAsDataURL(file);
+    setPreview(URL.createObjectURL(file));
+    setResult(null);
   };
 
   const handleScan = async () => {
-    if (!imageBase64) return;
+    if (!preview) return;
     setScanning(true);
-    setResult(null);
+    setProgress("Loading OCR engine…");
     try {
-      const response = await fetch("/api/ocr/tire-size", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64, mimeType }),
+      const worker = await createWorker("eng", 1, {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setProgress(`Reading sticker… ${Math.round(m.progress * 100)}%`);
+          } else if (m.status.startsWith("loading")) {
+            setProgress("Loading OCR engine…");
+          }
+        },
       });
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || "Scan failed");
-      }
+      const { data: { text } } = await worker.recognize(preview);
+      await worker.terminate();
 
-      const data = await response.json();
-      setResult(data);
+      const parsed = parseTireSizes(text);
+
+      if (parsed.sizes.length === 0) {
+        toast({
+          title: "No tire size found",
+          description: "Make sure the sticker is well-lit and in focus, then try again.",
+          variant: "destructive",
+        });
+      } else {
+        setResult(parsed);
+      }
     } catch (err: any) {
       toast({
         title: "Scan failed",
-        description: err.message || "Could not read tire size from image.",
+        description: err.message || "Could not read the image.",
         variant: "destructive",
       });
     } finally {
       setScanning(false);
+      setProgress("");
     }
   };
 
@@ -88,22 +108,20 @@ export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
   };
 
   const resetState = () => {
+    if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
-    setImageBase64(null);
     setResult(null);
     setScanning(false);
+    setProgress("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
-  const primarySize = result?.frontTire;
-  const hasResult = result && (primarySize || result.rawText);
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetState(); }}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="gap-2">
+        <Button type="button" variant="outline" size="sm" className="gap-2 shrink-0">
           <ScanLine className="w-4 h-4" />
-          Scan Door Jamb Sticker
+          Scan Sticker
         </Button>
       </DialogTrigger>
 
@@ -114,33 +132,33 @@ export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
             Tire Size Scanner
           </DialogTitle>
           <DialogDescription>
-            Take a photo of the sticker on your driver-side door jamb. It lists
-            your vehicle's recommended tire size and pressure.
+            Photo the sticker on your driver-side door jamb — it lists your
+            vehicle's recommended tire size and cold inflation pressure.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Upload area */}
+          {/* Upload / preview area */}
           <div
             className="border-2 border-dashed border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:border-blue-400 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !scanning && fileInputRef.current?.click()}
           >
             {preview ? (
               <img
                 src={preview}
-                alt="Door jamb sticker preview"
+                alt="Door jamb sticker"
                 className="w-full max-h-56 object-contain bg-gray-50"
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-gray-400 gap-2">
                 <Upload className="w-8 h-8" />
                 <span className="text-sm font-medium">Tap to upload or take a photo</span>
-                <span className="text-xs">JPG, PNG, WebP accepted</span>
+                <span className="text-xs">JPG, PNG, WebP — processed on-device, never uploaded</span>
               </div>
             )}
           </div>
 
-          {/* Hidden file input — capture="environment" opens rear camera on mobile */}
+          {/* capture="environment" opens the rear camera on mobile */}
           <input
             ref={fileInputRef}
             type="file"
@@ -151,7 +169,7 @@ export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
           />
 
           {/* Scan button */}
-          {imageBase64 && !hasResult && (
+          {preview && !result && (
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={handleScan}
@@ -160,7 +178,7 @@ export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
               {scanning ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Reading sticker…
+                  {progress || "Scanning…"}
                 </>
               ) : (
                 <>
@@ -172,84 +190,46 @@ export function TireSizeScanner({ onTireSizeDetected }: TireSizeScannerProps) {
           )}
 
           {/* Results */}
-          {hasResult && (
+          {result && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2 text-green-700 font-semibold">
+              <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
                 <CheckCircle className="w-4 h-4" />
-                Tire size detected
+                {result.sizes.length} tire size{result.sizes.length > 1 ? "s" : ""} detected
               </div>
 
-              {result.rawText && !primarySize ? (
-                <p className="text-sm text-gray-700 font-mono">{result.rawText}</p>
-              ) : (
-                <div className="space-y-1 text-sm">
-                  {result.frontTire && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">{result.rearTire ? "Front" : "All tires"}</span>
-                      <span className="font-mono font-semibold text-gray-900">{result.frontTire}</span>
-                    </div>
-                  )}
-                  {result.rearTire && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Rear</span>
-                      <span className="font-mono font-semibold text-gray-900">{result.rearTire}</span>
-                    </div>
-                  )}
-                  {result.spare && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Spare</span>
-                      <span className="font-mono text-gray-700">{result.spare}</span>
-                    </div>
-                  )}
-                  {(result.pressureFrontPsi || result.pressureRearPsi) && (
-                    <div className="pt-1 border-t border-green-200 text-xs text-gray-500">
-                      {result.pressureFrontPsi && (
-                        <span>
-                          {result.pressureRearPsi ? "Front" : "Cold pressure"}: {result.pressureFrontPsi} PSI
-                          {result.pressureRearPsi ? `  ·  Rear: ${result.pressureRearPsi} PSI` : ""}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="space-y-1 text-sm">
+                {result.sizes.map((size, i) => (
+                  <div key={size} className="flex items-center justify-between">
+                    <span className="text-gray-500">
+                      {result.sizes.length === 1 ? "All tires" : i === 0 ? "Front" : "Rear"}
+                    </span>
+                    <span className="font-mono font-semibold text-gray-900">{size}</span>
+                  </div>
+                ))}
+                {result.pressuresPsi.length > 0 && (
+                  <div className="pt-1 border-t border-green-200 text-xs text-gray-500">
+                    Cold pressure: {result.pressuresPsi.join(" / ")} PSI
+                  </div>
+                )}
+              </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-2 pt-1">
-                {primarySize && (
+              <div className="flex gap-2">
+                {result.sizes.map((size, i) => (
                   <Button
+                    key={size}
                     size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleUseSize(primarySize)}
+                    className={i === 0 ? "flex-1 bg-green-600 hover:bg-green-700" : "flex-1"}
+                    variant={i === 0 ? "default" : "outline"}
+                    onClick={() => handleUseSize(size)}
                   >
-                    Use {result.rearTire ? "Front" : ""} Size
+                    Use {result.sizes.length > 1 ? (i === 0 ? "Front" : "Rear") : "This Size"}
                   </Button>
-                )}
-                {result.rearTire && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => handleUseSize(result.rearTire!)}
-                  >
-                    Use Rear Size
-                  </Button>
-                )}
-                {result.rawText && !primarySize && (
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleUseSize(result.rawText!)}
-                  >
-                    Use This
-                  </Button>
-                )}
+                ))}
               </div>
             </div>
           )}
 
-          {/* Retry option after result */}
-          {hasResult && (
+          {result && (
             <Button
               type="button"
               variant="ghost"

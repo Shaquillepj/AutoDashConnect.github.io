@@ -352,66 +352,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Tire size OCR route
-  app.post('/api/ocr/tire-size', async (req, res) => {
-    try {
-      const { imageBase64, mimeType } = req.body;
-
-      if (!imageBase64 || typeof imageBase64 !== 'string') {
-        return res.status(400).json({ message: 'imageBase64 is required' });
-      }
-
-      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      const resolvedMime: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' =
-        validMimeTypes.includes(mimeType) ? mimeType : 'image/jpeg';
-
-      const { default: Anthropic } = await import('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-      const message = await client.messages.create({
-        model: 'claude-opus-4-7',
-        max_tokens: 512,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: resolvedMime, data: imageBase64 },
-            },
-            {
-              type: 'text',
-              text: `This is a vehicle door jamb sticker (tire placard). Extract the tire size information and return ONLY a JSON object with no markdown or extra text:
-{
-  "frontTire": "front tire size e.g. P215/60R16 or 215/60R16",
-  "rearTire": "rear tire size if different from front, otherwise null",
-  "spare": "spare tire size if listed, otherwise null",
-  "pressureFrontPsi": front cold inflation pressure as a number (no units), or null,
-  "pressureRearPsi": rear cold inflation pressure as a number (no units), or null
-}`,
-            },
-          ],
-        }],
-      });
-
-      const textBlock = message.content.find(c => c.type === 'text');
-      if (!textBlock || textBlock.type !== 'text') {
-        return res.status(500).json({ message: 'No response from vision model' });
-      }
-
-      let tireData: Record<string, unknown>;
-      try {
-        tireData = JSON.parse(textBlock.text.trim());
-      } catch {
-        return res.json({ success: true, frontTire: null, rawText: textBlock.text });
-      }
-
-      res.json({ success: true, ...tireData });
-    } catch (error: any) {
-      console.error('Tire OCR error:', error);
-      res.status(500).json({ message: error.message || 'Failed to process image' });
-    }
-  });
-
   const httpServer = createServer(app);
   return httpServer;
 }
