@@ -122,11 +122,14 @@ export class MemStorage implements IStorage {
       reviewCount: 127,
       isActive: true,
       isAvailable: true,
+      isVerified: true,
+      verifiedAt: new Date(),
       businessLicense: "DET-2024-001",
       insurance: "INS-2024-001",
       location: { lat: 40.7128, lng: -74.0060, address: "New York, NY" },
       latitude: "40.7128",
       longitude: "-74.0060",
+      locationUpdatedAt: new Date(),
     };
 
     this.serviceProviders.set(provider.id, provider);
@@ -217,11 +220,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      rewardPoints: insertUser.rewardPoints || 0,
-      createdAt: new Date() 
+    const user: User = {
+      ...insertUser,
+      id,
+      phone: insertUser.phone ?? null,
+      rewardPoints: insertUser.rewardPoints ?? 0,
+      createdAt: new Date(),
     };
     this.users.set(id, user);
     return user;
@@ -247,14 +251,32 @@ export class MemStorage implements IStorage {
 
   async createServiceProvider(provider: InsertServiceProvider): Promise<ServiceProvider> {
     const id = randomUUID();
-    const serviceProvider: ServiceProvider = { ...provider, id };
+    const serviceProvider: ServiceProvider = {
+      ...provider,
+      id,
+      description: provider.description ?? null,
+      serviceRadius: provider.serviceRadius ?? null,
+      rating: provider.rating ?? null,
+      reviewCount: provider.reviewCount ?? null,
+      isActive: provider.isActive ?? null,
+      isAvailable: provider.isAvailable ?? null,
+      isVerified: provider.isVerified ?? false,
+      verifiedAt: provider.verifiedAt ?? null,
+      businessLicense: provider.businessLicense ?? null,
+      insurance: provider.insurance ?? null,
+      location: provider.location ?? null,
+      latitude: provider.latitude ?? null,
+      longitude: provider.longitude ?? null,
+      locationUpdatedAt: provider.locationUpdatedAt ?? null,
+    };
     this.serviceProviders.set(id, serviceProvider);
     return serviceProvider;
   }
 
   async getServiceProvidersInRadius(lat: number, lng: number, radius: number): Promise<ServiceProvider[]> {
-    // Simple implementation - in real app would use proper geospatial queries
-    return Array.from(this.serviceProviders.values()).filter(sp => sp.isActive);
+    return Array.from(this.serviceProviders.values())
+      .filter(sp => sp.isActive && sp.latitude != null && sp.longitude != null)
+      .filter(sp => this.calculateDistance(lat, lng, sp.latitude, sp.longitude) <= radius);
   }
 
   async updateServiceProvider(id: string, updates: Partial<ServiceProvider>): Promise<ServiceProvider | undefined> {
@@ -277,7 +299,13 @@ export class MemStorage implements IStorage {
 
   async createService(service: InsertService): Promise<Service> {
     const id = randomUUID();
-    const newService: Service = { ...service, id };
+    const newService: Service = {
+      ...service,
+      id,
+      description: service.description ?? null,
+      isActive: service.isActive ?? null,
+      requirements: service.requirements ?? null,
+    };
     this.services.set(id, newService);
     return newService;
   }
@@ -298,7 +326,12 @@ export class MemStorage implements IStorage {
 
   async createAddOnService(addOn: InsertAddOnService): Promise<AddOnService> {
     const id = randomUUID();
-    const newAddOn: AddOnService = { ...addOn, id };
+    const newAddOn: AddOnService = {
+      ...addOn,
+      id,
+      description: addOn.description ?? null,
+      isActive: addOn.isActive ?? null,
+    };
     this.addOnServices.set(id, newAddOn);
     return newAddOn;
   }
@@ -318,11 +351,14 @@ export class MemStorage implements IStorage {
 
   async createBooking(booking: InsertBooking): Promise<Booking> {
     const id = randomUUID();
-    const newBooking: Booking = { 
-      ...booking, 
-      id, 
+    const newBooking: Booking = {
+      ...booking,
+      id,
+      vehicleInfo: booking.vehicleInfo ?? null,
+      addOns: booking.addOns ?? null,
+      notes: booking.notes ?? null,
       createdAt: new Date(),
-      completedAt: null
+      completedAt: null,
     };
     this.bookings.set(id, newBooking);
     return newBooking;
@@ -344,7 +380,12 @@ export class MemStorage implements IStorage {
 
   async createReview(review: InsertReview): Promise<Review> {
     const id = randomUUID();
-    const newReview: Review = { ...review, id, createdAt: new Date() };
+    const newReview: Review = {
+      ...review,
+      id,
+      comment: review.comment ?? null,
+      createdAt: new Date(),
+    };
     this.reviews.set(id, newReview);
     return newReview;
   }
@@ -356,7 +397,12 @@ export class MemStorage implements IStorage {
 
   async createInventoryItem(item: InsertInventory): Promise<Inventory> {
     const id = randomUUID();
-    const newItem: Inventory = { ...item, id, lastRestocked: new Date() };
+    const newItem: Inventory = {
+      ...item,
+      id,
+      minStock: item.minStock ?? null,
+      lastRestocked: new Date(),
+    };
     this.inventory.set(id, newItem);
     return newItem;
   }
@@ -389,13 +435,21 @@ export class MemStorage implements IStorage {
 
   async createEmergencyRequest(request: InsertEmergencyRequest): Promise<EmergencyRequest> {
     const id = randomUUID();
-    const newRequest: EmergencyRequest = { 
-      ...request, 
-      id, 
+    const newRequest: EmergencyRequest = {
+      ...request,
+      id,
+      status: request.status ?? 'pending',
+      providerId: request.providerId ?? null,
+      totalAmount: request.totalAmount ?? null,
+      vehicleInfo: request.vehicleInfo ?? null,
+      issuePhoto: request.issuePhoto ?? null,
+      estimatedArrival: request.estimatedArrival ?? null,
+      urgencyLevel: request.urgencyLevel ?? 'medium',
+      notes: request.notes ?? null,
       createdAt: new Date(),
       assignedAt: null,
       arrivedAt: null,
-      completedAt: null
+      completedAt: null,
     };
     this.emergencyRequests.set(id, newRequest);
     return newRequest;
@@ -421,9 +475,8 @@ export class MemStorage implements IStorage {
   }
 
   async findNearestProviders(lat: number, lng: number, maxRadius: number = 50): Promise<ServiceProvider[]> {
-    const providers = Array.from(this.serviceProviders.values()).filter(p => p.isAvailable);
-    
-    return providers
+    return Array.from(this.serviceProviders.values())
+      .filter(p => p.isAvailable && p.isVerified && p.latitude != null && p.longitude != null)
       .map(provider => ({
         provider,
         distance: this.calculateDistance(lat, lng, provider.latitude, provider.longitude)
@@ -433,13 +486,13 @@ export class MemStorage implements IStorage {
       .map(({ provider }) => provider);
   }
 
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
+  private calculateDistance(lat1: number | string | null, lon1: number | string | null, lat2: number | string | null, lon2: number | string | null): number {
+    const R = 3958.8; // Earth's radius in miles
+    const dLat = (Number(lat2) - Number(lat1)) * Math.PI / 180;
+    const dLon = (Number(lon2) - Number(lon1)) * Math.PI / 180;
+    const a =
       Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.cos(Number(lat1) * Math.PI / 180) * Math.cos(Number(lat2) * Math.PI / 180) *
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;

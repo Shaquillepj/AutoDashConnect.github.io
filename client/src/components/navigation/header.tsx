@@ -1,42 +1,65 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/hooks/use-user";
-import { Bell, Car, User } from "lucide-react";
+import { Bell, Zap } from "lucide-react";
 
 export function Header() {
   const { user, logout, isProvider } = useUser();
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="sticky top-0 z-50"
+      style={{ background: "hsl(225 22% 9%)", boxShadow: "0 1px 12px rgba(0,0,0,0.18)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Car className="w-8 h-8 text-blue-600 mr-3" />
-            <span className="text-xl font-bold text-gray-900">AutoCare Pro</span>
+
+          {/* Wordmark */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ background: "hsl(204 70% 53% / 0.15)" }}>
+                <Zap className="w-4 h-4 text-electric" />
+              </div>
+              <span className="text-base font-bold tracking-tight" style={{ color: "#FFFFFF" }}>
+                Auto<span className="text-electric">Dash</span>
+                <span className="font-light" style={{ color: "hsl(204 15% 65%)" }}> Connect</span>
+              </span>
+            </div>
             {isProvider && (
-              <Badge className="ml-3 bg-blue-100 text-blue-600">Provider</Badge>
+              <Badge className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5"
+                style={{ background: "hsl(204 70% 53% / 0.15)", color: "var(--electric)", border: "1px solid hsl(204 70% 53% / 0.3)" }}>
+                Provider
+              </Badge>
             )}
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="w-5 h-5 text-gray-500" />
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm"
+              className="relative w-9 h-9 p-0 rounded-xl hover:bg-white/10"
+              style={{ color: "hsl(204 15% 65%)" }}>
+              <Bell className="w-4 h-4" />
               {isProvider && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
+                  style={{ background: "var(--electric)" }}>
                   3
                 </span>
               )}
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-600">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </span>
+
+            <div className="flex items-center gap-2 pl-2 ml-1"
+              style={{ borderLeft: "1px solid hsl(225 15% 25%)" }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                style={{ background: "var(--electric)" }}>
+                {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Logout
+              <Button variant="ghost" size="sm" onClick={logout}
+                className="text-xs h-8 px-2 hover:bg-white/10"
+                style={{ color: "hsl(204 15% 65%)" }}>
+                Sign out
               </Button>
             </div>
           </div>
+
         </div>
       </div>
     </header>

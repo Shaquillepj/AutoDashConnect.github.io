@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { 
+import {
   insertUserSchema,
   insertServiceProviderSchema,
   insertServiceSchema,
@@ -11,6 +11,17 @@ import {
   insertEmergencyRequestSchema
 } from "@shared/schema";
 import { z } from "zod";
+
+// Flat rates in USD per emergency issue type — committed price shown to driver before dispatch
+const EMERGENCY_FLAT_RATES: Record<string, number> = {
+  flat_tire: 75,
+  dead_battery: 65,
+  lockout: 60,
+  towing: 120,
+  engine_trouble: 95,
+  accident: 95,
+  other: 85,
+};
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -94,9 +105,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/providers/:id', async (req, res) => {
+  app.get('/api/providers/user/:userId', async (req, res) => {
     try {
-      const provider = await storage.getServiceProvider(req.params.id);
+      const provider = await storage.getServiceProviderByUserId(req.params.userId);
       if (!provider) {
         return res.status(404).json({ message: 'Provider not found' });
       }
@@ -106,9 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/providers/user/:userId', async (req, res) => {
+  app.get('/api/providers/:id', async (req, res) => {
     try {
-      const provider = await storage.getServiceProviderByUserId(req.params.userId);
+      const provider = await storage.getServiceProvider(req.params.id);
       if (!provider) {
         return res.status(404).json({ message: 'Provider not found' });
       }
@@ -123,6 +134,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const providerData = insertServiceProviderSchema.parse(req.body);
       const provider = await storage.createServiceProvider(providerData);
       res.status(201).json(provider);
+    } catch (error) {
+      res.status(400).json({ message: 'Invalid request data' });
+    }
+  });
+
+  // Mark a provider as verified (admin action)
+  app.post('/api/providers/:id/verify', async (req, res) => {
+    try {
+      const provider = await storage.updateServiceProvider(req.params.id, {
+        isVerified: true,
+        verifiedAt: new Date(),
+      });
+      if (!provider) {
+        return res.status(404).json({ message: 'Provider not found' });
+      }
+      res.json(provider);
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Provider updates their current location and availability together
+  app.patch('/api/providers/:id/location', async (req, res) => {
+    try {
+      const { lat, lng, address, isAvailable } = z.object({
+        lat: z.number(),
+        lng: z.number(),
+        address: z.string(),
+        isAvailable: z.boolean().optional(),
+      }).parse(req.body);
+
+      const updates: any = {
+        latitude: lat.toString(),
+        longitude: lng.toString(),
+        location: { lat, lng, address },
+        locationUpdatedAt: new Date(),
+      };
+      if (isAvailable !== undefined) updates.isAvailable = isAvailable;
+
+      const provider = await storage.updateServiceProvider(req.params.id, updates);
+      if (!provider) {
+        return res.status(404).json({ message: 'Provider not found' });
+      }
+      res.json(provider);
     } catch (error) {
       res.status(400).json({ message: 'Invalid request data' });
     }
@@ -264,19 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Emergency Request routes
-  app.get('/api/emergency-requests/:id', async (req, res) => {
-    try {
-      const request = await storage.getEmergencyRequest(req.params.id);
-      if (!request) {
-        return res.status(404).json({ message: 'Emergency request not found' });
-      }
-      res.json(request);
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-
+  // Emergency Request routes — specific paths before generic /:id
   app.get('/api/emergency-requests/customer/:customerId', async (req, res) => {
     try {
       const requests = await storage.getEmergencyRequestsByCustomerId(req.params.customerId);
@@ -304,18 +347,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/emergency-requests/:id', async (req, res) => {
+    try {
+      const request = await storage.getEmergencyRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ message: 'Emergency request not found' });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.post('/api/emergency-requests', async (req, res) => {
     try {
-      const requestData = insertEmergencyRequestSchema.parse(req.body);
-      const request = await storage.createEmergencyRequest(requestData);
-      
-      // Auto-route to nearest providers
+      const quotedPrice = EMERGENCY_FLAT_RATES[req.body.issueType] ?? EMERGENCY_FLAT_RATES.other;
+      const requestData = insertEmergencyRequestSchema.parse({
+        ...req.body,
+        totalAmount: quotedPrice.toString(),
+      });
+
       const location = requestData.customerLocation as { lat: number; lng: number; address: string };
       const nearbyProviders = await storage.findNearestProviders(location.lat, location.lng, 50);
-      
-      res.status(201).json({ 
+
+      if (nearbyProviders.length === 0) {
+        return res.status(503).json({
+          message: 'No providers available in your area right now.',
+          suggestion: 'Try again in a few minutes or call 911 if this is a safety emergency.',
+          quotedPrice,
+          noProviders: true,
+        });
+      }
+
+      const request = await storage.createEmergencyRequest(requestData);
+
+      res.status(201).json({
         request,
-        nearbyProviders: nearbyProviders.slice(0, 5) // Return top 5 nearest providers
+        nearbyProviders: nearbyProviders.slice(0, 5),
+        quotedPrice,
       });
     } catch (error) {
       res.status(400).json({ message: 'Invalid request data' });

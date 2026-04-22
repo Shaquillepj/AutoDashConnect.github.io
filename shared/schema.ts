@@ -25,11 +25,14 @@ export const serviceProviders = pgTable("service_providers", {
   reviewCount: integer("review_count").default(0),
   isActive: boolean("is_active").default(true),
   isAvailable: boolean("is_available").default(true), // for emergency requests
+  isVerified: boolean("is_verified").default(false),
+  verifiedAt: timestamp("verified_at"),
   businessLicense: text("business_license"),
   insurance: text("insurance"),
   location: jsonb("location"), // { lat, lng, address }
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  locationUpdatedAt: timestamp("location_updated_at"),
 });
 
 export const services = pgTable("services", {

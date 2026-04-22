@@ -1,403 +1,225 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Brand tokens ────────────────────────────────────────────────────────── */
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(210 25% 7.8431%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(217.9 91.2% 59.8%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 40% 98%);
-  --secondary-foreground: hsl(222.2 84% 4.9%);
-  --muted: hsl(210 40% 96%);
-  --muted-foreground: hsl(215.4 16.3% 46.9%);
-  --accent: hsl(210 40% 96%);
-  --accent-foreground: hsl(222.2 84% 4.9%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(210 40% 98%);
-  --border: hsl(214.3 31.8% 91.4%);
-  --input: hsl(214.3 31.8% 91.4%);
-  --ring: hsl(217.9 91.2% 59.8%);
-  --chart-1: hsl(217.9 91.2% 59.8%);
+  /* Brand */
+  --midnight:          hsl(225 19% 13%);
+  --electric:          hsl(204 70% 53%);   /* #3498DB */
+  --electric-dim:      hsl(204 70% 44%);
+  --electric-glow:     hsl(204 70% 53% / 0.15);
+  --neutral:           hsl(204 15% 94%);
+
+  /* Light-theme semantics */
+  --background:        hsl(0 0% 100%);            /* pure white page */
+  --surface:           hsl(0 0% 100%);            /* white cards/panels */
+  --surface-raised:    hsl(220 16% 96%);          /* #F4F5F7 — inputs, tiles, sections */
+  --surface-overlay:   hsl(220 14% 92%);          /* #E8EAED — hover states */
+
+  --foreground:        hsl(225 22% 9%);           /* near-black text */
+  --foreground-muted:  hsl(218 12% 45%);          /* secondary text */
+  --foreground-subtle: hsl(218 10% 62%);          /* placeholder / tertiary */
+
+  --border:            hsl(220 14% 90%);          /* #E3E5E8 very light */
+  --border-strong:     hsl(220 13% 82%);
+
+  /* shadcn variable map */
+  --card:              var(--surface);
+  --card-foreground:   var(--foreground);
+  --popover:           hsl(0 0% 100%);
+  --popover-foreground:var(--foreground);
+  --primary:           var(--electric);
+  --primary-foreground:hsl(0 0% 100%);
+  --secondary:         var(--surface-raised);
+  --secondary-foreground: var(--foreground);
+  --muted:             var(--surface-raised);
+  --muted-foreground:  var(--foreground-muted);
+  --accent:            var(--surface-overlay);
+  --accent-foreground: var(--foreground);
+  --destructive:       hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --input:             var(--surface-raised);
+  --ring:              var(--electric);
+  --border:            hsl(220 14% 90%);
+  --radius:            0.75rem;
+
+  --chart-1: var(--electric);
   --chart-2: hsl(173 58% 39%);
-  --chart-3: hsl(197 37% 24%);
-  --chart-4: hsl(43 74% 66%);
+  --chart-3: hsl(43 74% 66%);
+  --chart-4: hsl(280 60% 60%);
   --chart-5: hsl(27 87% 67%);
-  --sidebar: hsl(0 0% 100%);
-  --sidebar-foreground: hsl(210 25% 7.8431%);
-  --sidebar-primary: hsl(217.9 91.2% 59.8%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(210 40% 96%);
-  --sidebar-accent-foreground: hsl(222.2 84% 4.9%);
-  --sidebar-border: hsl(214.3 31.8% 91.4%);
-  --sidebar-ring: hsl(217.9 91.2% 59.8%);
-  
-  /* Automotive theme colors */
-  --automotive-blue: hsl(217.9 91.2% 59.8%);
-  --automotive-slate: hsl(215.3 25% 26.7%);
-  --automotive-light: hsl(210 40% 98%);
-  --automotive-gray: hsl(210 11.3% 71%);
-  
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 0.75rem;
-  
-  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.1);
-  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.1), 0px 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0px 4px 6px -1px hsl(0 0% 0% / 0.1), 0px 2px 4px -2px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0px 10px 15px -3px hsl(0 0% 0% / 0.1), 0px 4px 6px -4px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0px 20px 25px -5px hsl(0 0% 0% / 0.1), 0px 8px 10px -6px hsl(0 0% 0% / 0.1);
-  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.25);
+
+  --sidebar:                   var(--surface);
+  --sidebar-foreground:        var(--foreground);
+  --sidebar-primary:           var(--electric);
+  --sidebar-primary-foreground:hsl(0 0% 100%);
+  --sidebar-accent:            var(--surface-raised);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border:            var(--border);
+  --sidebar-ring:              var(--electric);
+
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', Menlo, monospace;
+
+  --shadow-xs:  0 1px 2px hsl(220 14% 50% / 0.08);
+  --shadow-sm:  0 1px 4px hsl(220 14% 50% / 0.10);
+  --shadow-md:  0 4px 12px hsl(220 14% 50% / 0.12);
+  --shadow-lg:  0 10px 24px hsl(220 14% 50% / 0.13);
+  --shadow-xl:  0 20px 40px hsl(220 14% 50% / 0.14);
+  --shadow-2xl: 0 32px 64px hsl(220 14% 50% / 0.16);
+  --shadow-glow: 0 0 20px hsl(204 70% 53% / 0.25);
+  --shadow-card: 0 1px 3px hsl(220 14% 50% / 0.10), 0 1px 2px hsl(220 14% 50% / 0.06);
 }
 
-.dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-  --card: hsl(222.2 84% 4.9%);
-  --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222.2 84% 4.9%);
-  --popover-foreground: hsl(210 40% 98%);
-  --primary: hsl(217.2 91.2% 59.8%);
-  --primary-foreground: hsl(222.2 84% 4.9%);
-  --secondary: hsl(217.2 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
-  --muted: hsl(217.2 32.6% 17.5%);
-  --muted-foreground: hsl(215 20.2% 65.1%);
-  --accent: hsl(217.2 32.6% 17.5%);
-  --accent-foreground: hsl(210 40% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(210 40% 98%);
-  --border: hsl(217.2 32.6% 17.5%);
-  --input: hsl(217.2 32.6% 17.5%);
-  --ring: hsl(212.7 26.8% 83.9%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
-  --sidebar: hsl(222.2 84% 4.9%);
-  --sidebar-foreground: hsl(210 40% 98%);
-  --sidebar-primary: hsl(217.2 91.2% 59.8%);
-  --sidebar-primary-foreground: hsl(222.2 84% 4.9%);
-  --sidebar-accent: hsl(217.2 32.6% 17.5%);
-  --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(217.2 32.6% 17.5%);
-  --sidebar-ring: hsl(212.7 26.8% 83.9%);
-  
-  /* Dark theme automotive colors */
-  --automotive-blue: hsl(217.2 91.2% 59.8%);
-  --automotive-slate: hsl(215.3 25% 26.7%);
-  --automotive-light: hsl(217.2 32.6% 17.5%);
-  --automotive-gray: hsl(215 20.2% 65.1%);
-}
-
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
+
+  html { color-scheme: light; }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+    color: var(--foreground);
   }
 
-  h1 {
-    @apply text-3xl font-bold;
+  h1 { @apply text-3xl font-bold; }
+  h2 { @apply text-2xl font-bold; }
+  h3 { @apply text-xl font-semibold; }
+
+  input, textarea, select {
+    background-color: var(--surface-raised);
+    color: var(--foreground);
   }
 
-  h2 {
-    @apply text-2xl font-bold;
-  }
-
-  h3 {
-    @apply text-xl font-semibold;
-  }
-
-  /* Automotive specific styles */
-  .automotive-gradient {
-    background: linear-gradient(135deg, var(--automotive-blue) 0%, hsl(217.9 91.2% 45%) 100%);
-  }
-
-  .automotive-card {
-    @apply bg-card border border-border rounded-lg shadow-sm;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .automotive-card:hover {
-    @apply shadow-md;
-    transform: translateY(-1px);
-  }
-
-  .automotive-button-primary {
-    @apply bg-automotive-blue text-white hover:bg-automotive-blue/90 shadow-sm;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .automotive-button-primary:hover {
-    transform: translateY(-1px);
-    @apply shadow-md;
-  }
-
-  /* Loading states */
-  .skeleton {
-    @apply animate-pulse bg-muted rounded;
-  }
-
-  /* Focus states for accessibility */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-  }
-
-  /* Custom scrollbar */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--muted-foreground) transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: var(--muted-foreground);
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: var(--foreground);
+  input::placeholder, textarea::placeholder {
+    color: var(--foreground-subtle);
   }
 }
 
+/* ─── Components ─────────────────────────────────────────────────────────── */
 @layer components {
-  /* Service category cards */
-  .service-category-card {
-    @apply automotive-card p-6 cursor-pointer;
+
+  /* Clean white card with shadow (Uber-style, no border) */
+  .card-surface {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease;
+  }
+  .card-surface:hover {
+    box-shadow: var(--shadow-md);
   }
 
-  .service-category-card:hover {
-    @apply automotive-card shadow-md border-primary/20;
+  /* Grey-tinted tile (for category pills, options sections) */
+  .tile {
+    background-color: var(--surface-raised);
+    border-radius: var(--radius);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tile:hover {
+    background-color: var(--surface-overlay);
+    box-shadow: var(--shadow-xs);
   }
 
-  /* Provider cards */
-  .provider-card {
-    @apply automotive-card overflow-hidden cursor-pointer;
+  /* Legacy alias kept so existing card-premium uses still get a card look */
+  .card-premium {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease;
+  }
+  .card-premium:hover {
+    box-shadow: var(--shadow-md);
   }
 
-  .provider-card:hover {
-    @apply shadow-lg;
+  /* Electric blue glow button */
+  .btn-electric {
+    background-color: var(--electric);
+    color: hsl(0 0% 100%);
+    font-weight: 600;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-electric:hover {
+    background-color: var(--electric-dim);
+    box-shadow: var(--shadow-glow);
   }
 
-  /* Booking flow styles */
-  .booking-step {
-    @apply flex items-center;
+  /* Ghost electric button */
+  .btn-ghost-electric {
+    color: var(--electric);
+    border: 1px solid hsl(204 70% 53% / 0.3);
+    background: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-ghost-electric:hover {
+    background-color: var(--electric-glow);
+    border-color: hsl(204 70% 53% / 0.5);
   }
 
-  .booking-step-active {
-    @apply text-primary font-medium;
-  }
-
-  .booking-step-completed {
-    @apply text-green-600;
-  }
-
-  .booking-step-inactive {
-    @apply text-muted-foreground;
+  /* Subtle electric divider */
+  .divider-electric {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--electric), transparent);
+    opacity: 0.2;
   }
 
   /* Status badges */
-  .status-badge-pending {
-    @apply bg-yellow-100 text-yellow-800;
-  }
+  .status-pending    { @apply bg-amber-50    text-amber-700  border border-amber-200  text-xs font-medium px-2.5 py-0.5 rounded-full; }
+  .status-confirmed  { @apply bg-blue-50     text-blue-700   border border-blue-200   text-xs font-medium px-2.5 py-0.5 rounded-full; }
+  .status-progress   { @apply bg-emerald-50  text-emerald-700 border border-emerald-200 text-xs font-medium px-2.5 py-0.5 rounded-full; }
+  .status-completed  { @apply bg-zinc-100    text-zinc-600   border border-zinc-200   text-xs font-medium px-2.5 py-0.5 rounded-full; }
+  .status-cancelled  { @apply bg-red-50      text-red-700    border border-red-200    text-xs font-medium px-2.5 py-0.5 rounded-full; }
 
-  .status-badge-confirmed {
-    @apply bg-blue-100 text-blue-800;
-  }
-
-  .status-badge-in-progress {
-    @apply bg-green-100 text-green-800;
-  }
-
-  .status-badge-completed {
-    @apply bg-gray-100 text-gray-800;
-  }
-
-  .status-badge-cancelled {
-    @apply bg-red-100 text-red-800;
-  }
-
-  /* Dashboard stats cards */
-  .stats-card {
-    @apply automotive-card p-6;
-  }
-
-  .stats-icon {
-    @apply w-12 h-12 rounded-lg flex items-center justify-center;
-  }
-
-  .stats-icon-revenue {
-    @apply bg-green-100 text-green-600;
-  }
-
-  .stats-icon-bookings {
-    @apply bg-blue-100 text-blue-600;
-  }
-
-  .stats-icon-rating {
-    @apply bg-yellow-100 text-yellow-600;
-  }
-
-  .stats-icon-completion {
-    @apply bg-purple-100 text-purple-600;
-  }
+  /* Stats icon containers */
+  .stats-icon-revenue    { background: hsl(142 70% 40% / 0.10); color: hsl(142 60% 35%); }
+  .stats-icon-bookings   { background: hsl(204 70% 53% / 0.10); color: hsl(204 70% 40%); }
+  .stats-icon-rating     { background: hsl(43  89% 52% / 0.10); color: hsl(43  80% 40%); }
+  .stats-icon-completion { background: hsl(270 60% 60% / 0.10); color: hsl(270 55% 50%); }
 }
 
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Text utilities */
-  .text-automotive-blue {
-    color: var(--automotive-blue);
-  }
+  .text-electric   { color: var(--electric); }
+  .bg-electric     { background-color: var(--electric); }
+  .border-electric { border-color: var(--electric); }
+  .text-neutral    { color: var(--neutral); }
+  .bg-midnight     { background-color: var(--midnight); }
+  .glow-electric   { box-shadow: var(--shadow-glow); }
 
-  .text-automotive-slate {
-    color: var(--automotive-slate);
-  }
-
-  .text-automotive-gray {
-    color: var(--automotive-gray);
-  }
-
-  /* Background utilities */
-  .bg-automotive-blue {
-    background-color: var(--automotive-blue);
-  }
-
-  .bg-automotive-slate {
-    background-color: var(--automotive-slate);
-  }
-
-  .bg-automotive-light {
-    background-color: var(--automotive-light);
-  }
-
-  /* Border utilities */
-  .border-automotive-blue {
-    border-color: var(--automotive-blue);
-  }
-
-  /* Animation utilities */
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-
-  .animate-bounce-subtle {
-    animation: bounceSubtle 0.6s ease-in-out;
-  }
+  .animate-fade-in  { animation: fadeIn  0.4s ease-out; }
+  .animate-slide-up { animation: slideUp 0.3s ease-out; }
 }
 
-/* Keyframe animations */
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
 }
 
-@keyframes bounceSubtle {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-3px);
-  }
-  60% {
-    transform: translateY(-1px);
-  }
-}
-
-/* Mobile optimizations */
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .mobile-padding {
-    @apply px-4 py-6;
-  }
-
-  .mobile-text {
-    @apply text-sm;
-  }
-
-  .mobile-button {
-    @apply py-3 px-4 text-base;
-  }
-
-  /* Bottom navigation spacing */
-  .mobile-bottom-nav-spacing {
-    @apply pb-20;
-  }
+  .mobile-bottom-nav-spacing { @apply pb-20; }
 }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  .print-only {
-    display: block !important;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .automotive-card {
-    @apply border-2;
-  }
-
-  .automotive-button-primary {
-    @apply border-2 border-primary;
-  }
-}
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .automotive-card,
-  .automotive-button-primary,
-  .animate-fade-in,
-  .animate-slide-up,
-  .animate-bounce-subtle {
+  .animate-fade-in, .animate-slide-up {
     animation: none !important;
     transition: none !important;
   }

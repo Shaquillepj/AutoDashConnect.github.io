@@ -13,6 +13,18 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        midnight: "var(--midnight)",
+        electric: {
+          DEFAULT: "var(--electric)",
+          dim: "var(--electric-dim)",
+          glow: "var(--electric-glow)",
+        },
+        neutral: "var(--neutral)",
+        surface: {
+          DEFAULT: "var(--surface)",
+          raised: "var(--surface-raised)",
+          overlay: "var(--surface-overlay)",
+        },
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",

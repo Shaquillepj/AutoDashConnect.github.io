@@ -2,15 +2,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/navigation/header";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { ServiceCategories } from "@/components/customer/service-categories";
 import { ProviderCard } from "@/components/customer/provider-card";
 import { useUser } from "@/hooks/use-user";
-import { MapPin, Calendar, Search, Gift, Star, AlertTriangle, Phone } from "lucide-react";
+import { MapPin, Calendar, Search, Gift, AlertTriangle, Phone } from "lucide-react";
 import { ServiceProvider, Booking } from "@shared/schema";
 import { useLocation } from "wouter";
 
@@ -38,189 +36,217 @@ export default function CustomerHome() {
     enabled: !!user?.id
   });
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
-        {/* Emergency Button */}
-        <Card className="mb-6 border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-                <div>
-                  <h3 className="font-bold text-red-800 dark:text-red-200">Need Emergency Help?</h3>
-                  <p className="text-sm text-red-700 dark:text-red-300">
-                    Flat tire, dead battery, lockout? Get immediate roadside assistance.
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setLocation('/customer/emergency-booking')}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Emergency Help
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+  const statusClass = (status: string) => {
+    switch (status) {
+      case 'completed':   return 'status-completed';
+      case 'confirmed':   return 'status-confirmed';
+      case 'in_progress': return 'status-progress';
+      case 'cancelled':   return 'status-cancelled';
+      default:            return 'status-pending';
+    }
+  };
 
-        {/* Search Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Find auto services near you</h1>
-          <p className="text-gray-600 mb-6">Professional mobile detailing and mechanic services at your location</p>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    placeholder="Enter your location"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Search className="w-4 h-4 mr-2" />
-                  Search Services
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 mobile-bottom-nav-spacing">
+
+        {/* Greeting */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">
+            Hey{user?.firstName ? `, ${user.firstName}` : ""} 👋
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">What do you need today?</p>
         </div>
 
-        {/* Service Categories */}
-        <ServiceCategories />
+        {/* Emergency banner */}
+        <div
+          className="mb-6 rounded-2xl p-4 flex items-center justify-between gap-3"
+          style={{
+            background: "hsl(0 65% 50% / 0.06)",
+            border: "1px solid hsl(0 65% 50% / 0.15)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "hsl(0 65% 50% / 0.10)" }}>
+              <AlertTriangle className="w-5 h-5" style={{ color: "hsl(0 65% 45%)" }} />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground text-sm">Need Emergency Help?</p>
+              <p className="text-xs text-muted-foreground">Flat tire · Dead battery · Lockout</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setLocation('/customer/emergency-booking')}
+            className="shrink-0 h-9 text-sm font-semibold rounded-xl text-white"
+            style={{ background: "hsl(0 65% 50%)" }}
+          >
+            <Phone className="w-3.5 h-3.5 mr-1.5" />
+            SOS
+          </Button>
+        </div>
 
-        {/* Featured Service Providers */}
+        {/* Search bar — Uber-style grey pill */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Top-Rated Providers</h2>
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
-              View all
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+              <Input
+                placeholder="Enter your location"
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+                className="pl-10 h-12 rounded-2xl bg-surface-raised border-0 text-sm focus-visible:ring-2 focus-visible:ring-electric/30 focus-visible:ring-offset-0"
+              />
+            </div>
+            <div className="relative">
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="pl-10 h-12 rounded-2xl bg-surface-raised border-0 text-sm focus-visible:ring-2 focus-visible:ring-electric/30 focus-visible:ring-offset-0 w-[160px]"
+              />
+            </div>
+            <Button
+              className="h-12 px-5 rounded-2xl bg-electric text-white hover:bg-electric-dim font-semibold shrink-0"
+              style={{ boxShadow: "var(--shadow-glow)" }}
+            >
+              <Search className="w-4 h-4" />
             </Button>
           </div>
-          
+        </div>
+
+        {/* Service categories */}
+        <ServiceCategories />
+
+        {/* Top-rated providers */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-foreground">Top-Rated Providers</h2>
+            <button className="text-sm font-semibold text-electric">View all</button>
+          </div>
+
           {providersLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(3)].map((_, i) => (
-                <Card key={i}>
-                  <Skeleton className="h-48 w-full" />
-                  <CardContent className="p-6">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-full mb-3" />
+                <div key={i} className="card-surface rounded-2xl overflow-hidden">
+                  <Skeleton className="h-44 w-full rounded-none" />
+                  <div className="p-4 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
                     <Skeleton className="h-3 w-1/2" />
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : providers && providers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {providers.map((provider) => (
+                <ProviderCard key={provider.id} provider={provider} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {providers?.map((provider) => (
-                <ProviderCard key={provider.id} provider={provider} />
-              ))}
+            <div className="tile rounded-2xl p-8 text-center">
+              <p className="text-muted-foreground text-sm">No providers found in your area.</p>
             </div>
           )}
         </div>
 
-        {/* Recent Bookings */}
+        {/* Recent bookings */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Bookings</h2>
-          <Card>
+          <h2 className="text-lg font-bold text-foreground mb-4">Recent Bookings</h2>
+          <div className="card-surface rounded-2xl overflow-hidden">
             {bookingsLoading ? (
-              <CardContent className="p-6">
+              <div className="p-5 space-y-4">
                 {[...Array(2)].map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 p-4">
-                    <Skeleton className="w-12 h-12 rounded-lg" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-1/2 mb-2" />
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-xl" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3.5 w-1/2" />
                       <Skeleton className="h-3 w-3/4" />
                     </div>
-                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
                   </div>
                 ))}
-              </CardContent>
+              </div>
             ) : recentBookings && recentBookings.length > 0 ? (
-              <CardContent className="p-0">
+              <>
                 {recentBookings.slice(0, 3).map((booking, index) => (
-                  <div key={booking.id} className={`p-6 ${index !== recentBookings.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Search className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">Service Booking</h3>
-                          <p className="text-sm text-gray-600">
-                            {new Date(booking.scheduledAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                  <div
+                    key={booking.id}
+                    className={`px-5 py-4 flex items-center justify-between gap-3 ${
+                      index < recentBookings.length - 1 ? "border-b border-border" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: "hsl(204 70% 53% / 0.1)" }}
+                      >
+                        <Search className="w-4 h-4" style={{ color: "var(--electric)" }} />
                       </div>
-                      <div className="text-right">
-                        <Badge 
-                          variant={booking.status === 'completed' ? 'default' : 'secondary'}
-                          className={booking.status === 'completed' ? 'bg-green-100 text-green-800' : ''}
-                        >
-                          {booking.status}
-                        </Badge>
-                        <p className="text-sm font-medium text-gray-900 mt-1">
-                          ${booking.totalAmount}
+                      <div>
+                        <p className="font-semibold text-foreground text-sm">Service Booking</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(booking.scheduledAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
+                    <div className="text-right shrink-0">
+                      <span className={statusClass(booking.status)}>{booking.status}</span>
+                      <p className="text-sm font-bold text-foreground mt-1">${booking.totalAmount}</p>
+                    </div>
                   </div>
                 ))}
-                <div className="p-4 text-center border-t border-gray-100">
-                  <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
-                    View all bookings
-                  </Button>
+                <div className="px-5 py-3 border-t border-border">
+                  <button className="text-sm font-semibold text-electric">View all bookings</button>
                 </div>
-              </CardContent>
+              </>
             ) : (
-              <CardContent className="p-6 text-center">
-                <p className="text-gray-500">No recent bookings found</p>
-              </CardContent>
+              <div className="p-8 text-center">
+                <p className="text-sm text-muted-foreground">No recent bookings</p>
+              </div>
             )}
-          </Card>
+          </div>
         </div>
 
-        {/* Rewards Section */}
-        <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold mb-2">AutoCare Rewards</h3>
-                <p className="text-purple-100 mb-4">Earn points with every booking and unlock exclusive rewards</p>
-                <div className="flex items-center space-x-4">
-                  <div className="bg-white/20 rounded-lg px-4 py-2">
-                    <div className="text-sm text-purple-100">Current Points</div>
-                    <div className="text-2xl font-bold">{user?.rewardPoints || 0}</div>
-                  </div>
-                  <div className="bg-white/20 rounded-lg px-4 py-2">
-                    <div className="text-sm text-purple-100">Next Reward</div>
-                    <div className="text-lg font-semibold">$10 Credit</div>
-                  </div>
-                </div>
+        {/* Rewards — unique gradient tile */}
+        <div
+          className="rounded-2xl p-5 flex items-center justify-between gap-4"
+          style={{
+            background: "linear-gradient(135deg, hsl(204 70% 53%) 0%, hsl(225 70% 55%) 100%)",
+          }}
+        >
+          <div>
+            <h3 className="text-base font-bold text-white mb-0.5">AutoDash Rewards</h3>
+            <p className="text-sm text-white/75 mb-4">Earn points with every booking</p>
+            <div className="flex items-center gap-3">
+              {/* Metallic silver stat tiles */}
+              <div className="rounded-xl px-4 py-2.5" style={{
+                background: "linear-gradient(145deg, #d8dce2 0%, #f4f5f7 35%, #c8ccd4 65%, #dde0e6 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 6px rgba(0,0,0,0.18)",
+                border: "1px solid rgba(255,255,255,0.6)",
+              }}>
+                <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: "hsl(220 15% 45%)" }}>Points</p>
+                <p className="text-xl font-bold" style={{ color: "hsl(220 20% 18%)" }}>{user?.rewardPoints ?? 0}</p>
               </div>
-              <div className="hidden md:block">
-                <Gift className="w-16 h-16 text-white/30" />
+              <div className="rounded-xl px-4 py-2.5" style={{
+                background: "linear-gradient(145deg, #d8dce2 0%, #f4f5f7 35%, #c8ccd4 65%, #dde0e6 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 6px rgba(0,0,0,0.18)",
+                border: "1px solid rgba(255,255,255,0.6)",
+              }}>
+                <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: "hsl(220 15% 45%)" }}>Next Reward</p>
+                <p className="text-base font-bold" style={{ color: "hsl(220 20% 18%)" }}>$10 Credit</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="hidden md:block opacity-20">
+            <Gift className="w-16 h-16 text-white" />
+          </div>
+        </div>
+
       </main>
 
       <BottomNav />
