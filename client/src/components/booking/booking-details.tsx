@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Car } from "lucide-react";
+import { TireSizeScanner } from "@/components/booking/tire-size-scanner";
 
 interface BookingDetailsProps {
   onComplete: (data: {
@@ -20,6 +21,7 @@ interface BookingDetailsProps {
       year: string;
       color: string;
       plateNumber: string;
+      tireSize: string;
     };
     notes: string;
   }) => void;
@@ -32,7 +34,8 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
     model: "",
     year: "",
     color: "",
-    plateNumber: ""
+    plateNumber: "",
+    tireSize: ""
   });
   const [notes, setNotes] = useState("");
 
@@ -181,6 +184,25 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
                 onChange={(e) => handleVehicleChange('plateNumber', e.target.value)}
                 placeholder="e.g., ABC-1234"
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="tireSize">Tire Size</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="tireSize"
+                  value={vehicleInfo.tireSize}
+                  onChange={(e) => handleVehicleChange('tireSize', e.target.value)}
+                  placeholder="e.g., P215/60R16 — or scan your door jamb sticker"
+                  className="flex-1"
+                />
+                <TireSizeScanner
+                  onTireSizeDetected={(size) => handleVehicleChange('tireSize', size)}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Find this on the sticker inside your driver-side door jamb.
+              </p>
             </div>
           </div>
         </CardContent>
