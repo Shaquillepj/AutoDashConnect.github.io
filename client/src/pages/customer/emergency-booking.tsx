@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, Camera, MapPin, Phone, Car, Clock } from "lucide-react";
+import { AlertCircle, Camera, MapPin, Phone, Car, Clock, Zap, Lock, Truck, Settings, HelpCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -158,13 +158,13 @@ export default function EmergencyBookingPage() {
   };
 
   const issueTypes = [
-    { value: "flat_tire", label: "Flat Tire", icon: "🚗" },
-    { value: "dead_battery", label: "Dead Battery", icon: "🔋" },
-    { value: "lockout", label: "Locked Out", icon: "🔒" },
-    { value: "towing", label: "Need Towing", icon: "🚛" },
-    { value: "engine_trouble", label: "Engine Trouble", icon: "⚙️" },
-    { value: "accident", label: "Accident", icon: "⚠️" },
-    { value: "other", label: "Other Issue", icon: "❓" }
+    { value: "flat_tire", label: "Flat Tire", icon: Car },
+    { value: "dead_battery", label: "Dead Battery", icon: Zap },
+    { value: "lockout", label: "Locked Out", icon: Lock },
+    { value: "towing", label: "Need Towing", icon: Truck },
+    { value: "engine_trouble", label: "Engine Trouble", icon: Settings },
+    { value: "accident", label: "Accident", icon: AlertCircle },
+    { value: "other", label: "Other Issue", icon: HelpCircle }
   ];
 
   const urgencyColors = {
@@ -177,10 +177,10 @@ export default function EmergencyBookingPage() {
   return (
     <div className="container mx-auto py-6 px-4 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Emergency Roadside Assistance
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground">
           Need immediate help? Submit your request and we'll connect you with the nearest available service provider.
         </p>
       </div>
@@ -225,7 +225,7 @@ export default function EmergencyBookingPage() {
                         {issueTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             <span className="flex items-center gap-2">
-                              <span>{type.icon}</span>
+                              <type.icon className="w-4 h-4" />
                               {type.label}
                             </span>
                           </SelectItem>
@@ -434,9 +434,9 @@ export default function EmergencyBookingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                <Camera className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <Camera className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-sm text-muted-foreground mb-2">
                   Take a photo of the issue to help providers understand the situation
                 </p>
                 <Button type="button" variant="outline" size="sm">

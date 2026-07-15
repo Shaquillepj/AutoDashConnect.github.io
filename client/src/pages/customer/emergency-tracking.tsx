@@ -1,15 +1,27 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { MapPin, Clock, Phone, User, Car, AlertCircle, CheckCircle, Navigation, MessageSquare } from "lucide-react";
+import { MapPin, Clock, Phone, User, Car, AlertCircle, CheckCircle, Navigation, MessageSquare, Zap, Lock, Truck, Settings, HelpCircle, Star } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { EmergencyRequest, ServiceProvider } from "@shared/schema";
+import type { EmergencyRequest, ServiceProvider, Location, VehicleInfo } from "@shared/schema";
 
 export default function EmergencyTrackingPage() {
   const { id } = useParams();
@@ -21,7 +33,8 @@ export default function EmergencyTrackingPage() {
   const { data: emergencyRequest, isLoading } = useQuery({
     queryKey: ['/api/emergency-requests', id],
     queryFn: async (): Promise<EmergencyRequest> => {
-      return apiRequest(`/api/emergency-requests/${id}`);
+      const response = await apiRequest('GET', `/api/emergency-requests/${id}`);
+      return response.json();
     },
     refetchInterval: 5000, // Poll every 5 seconds for real-time updates
   });
@@ -29,17 +42,16 @@ export default function EmergencyTrackingPage() {
   const { data: provider } = useQuery({
     queryKey: ['/api/providers', emergencyRequest?.providerId],
     queryFn: async (): Promise<ServiceProvider> => {
-      return apiRequest(`/api/providers/${emergencyRequest?.providerId}`);
+      const response = await apiRequest('GET', `/api/providers/${emergencyRequest?.providerId}`);
+      return response.json();
     },
     enabled: !!emergencyRequest?.providerId,
   });
 
   const cancelRequest = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/emergency-requests/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'cancelled' })
-      });
+      const response = await apiRequest('PATCH', `/api/emergency-requests/${id}`, { status: 'cancelled' });
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -69,12 +81,10 @@ export default function EmergencyTrackingPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 px-4 max-w-2xl">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-          <div className="space-y-4">
-            <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
+        <Skeleton className="h-8 w-1/2 rounded mb-4" />
+        <div className="space-y-4">
+          <Skeleton className="h-24 rounded" />
+          <Skeleton className="h-32 rounded" />
         </div>
       </div>
     );
@@ -87,7 +97,7 @@ export default function EmergencyTrackingPage() {
           <CardContent className="pt-6">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Request Not Found</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-muted-foreground mb-4">
               The emergency request could not be found.
             </p>
             <Button onClick={() => setLocation('/customer')}>
@@ -144,32 +154,33 @@ export default function EmergencyTrackingPage() {
   const getIssueTypeIcon = (issueType: string) => {
     switch (issueType) {
       case 'flat_tire':
-        return '🚗';
+        return Car;
       case 'dead_battery':
-        return '🔋';
+        return Zap;
       case 'lockout':
-        return '🔒';
+        return Lock;
       case 'towing':
-        return '🚛';
+        return Truck;
       case 'engine_trouble':
-        return '⚙️';
+        return Settings;
       case 'accident':
-        return '⚠️';
+        return AlertCircle;
       default:
-        return '❓';
+        return HelpCircle;
     }
   };
 
-  const vehicleInfo = emergencyRequest.vehicleInfo as any;
-  const location = emergencyRequest.customerLocation as any;
+  const vehicleInfo = emergencyRequest.vehicleInfo as VehicleInfo;
+  const location = emergencyRequest.customerLocation as Location;
+  const IssueIcon = getIssueTypeIcon(emergencyRequest.issueType);
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Emergency Request Tracking
         </h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-muted-foreground">
           Request ID: {emergencyRequest.id.slice(0, 8)}...
         </p>
       </div>
@@ -179,7 +190,7 @@ export default function EmergencyTrackingPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <span className="text-2xl">{getIssueTypeIcon(emergencyRequest.issueType)}</span>
+              <IssueIcon className="w-5 h-5 text-muted-foreground" />
               Request Status
             </span>
             <Badge className={getStatusColor(emergencyRequest.status)}>
@@ -193,7 +204,7 @@ export default function EmergencyTrackingPage() {
               <h3 className="font-semibold text-lg capitalize mb-1">
                 {emergencyRequest.issueType.replace('_', ' ')}
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 {emergencyRequest.description}
               </p>
             </div>
@@ -221,14 +232,14 @@ export default function EmergencyTrackingPage() {
             <div className="space-y-3">
               <div>
                 <h3 className="font-semibold text-lg">{provider.businessName}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{provider.description}</p>
+                <p className="text-muted-foreground">{provider.description}</p>
               </div>
               
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <span className="text-yellow-500">★</span>
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                   <span className="font-medium">{provider.rating}</span>
-                  <span className="text-gray-500">({provider.reviewCount} reviews)</span>
+                  <span className="text-muted-foreground">({provider.reviewCount} reviews)</span>
                 </div>
               </div>
 
@@ -261,7 +272,7 @@ export default function EmergencyTrackingPage() {
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-2">Vehicle Information</h4>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 {vehicleInfo?.year} {vehicleInfo?.make} {vehicleInfo?.model} ({vehicleInfo?.color})
                 {vehicleInfo?.plateNumber && ` - ${vehicleInfo.plateNumber}`}
               </p>
@@ -274,7 +285,7 @@ export default function EmergencyTrackingPage() {
                 <MapPin className="w-4 h-4" />
                 Your Location
               </h4>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 {location?.address}
               </p>
               <Button variant="outline" size="sm" className="mt-2">
@@ -297,7 +308,7 @@ export default function EmergencyTrackingPage() {
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <div>
                 <p className="font-medium">Request Submitted</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {new Date(emergencyRequest.createdAt!).toLocaleString()}
                 </p>
               </div>
@@ -308,7 +319,7 @@ export default function EmergencyTrackingPage() {
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <div>
                   <p className="font-medium">Provider Assigned</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(emergencyRequest.assignedAt).toLocaleString()}
                   </p>
                 </div>
@@ -320,7 +331,7 @@ export default function EmergencyTrackingPage() {
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <div>
                   <p className="font-medium">Provider Arrived</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(emergencyRequest.arrivedAt).toLocaleString()}
                   </p>
                 </div>
@@ -332,7 +343,7 @@ export default function EmergencyTrackingPage() {
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <div>
                   <p className="font-medium">Service Completed</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(emergencyRequest.completedAt).toLocaleString()}
                   </p>
                 </div>
@@ -352,14 +363,34 @@ export default function EmergencyTrackingPage() {
           Back to Dashboard
         </Button>
         {emergencyRequest.status === 'pending' && (
-          <Button
-            variant="destructive"
-            onClick={() => cancelRequest.mutate()}
-            disabled={cancelRequest.isPending}
-            className="flex-1"
-          >
-            Cancel Request
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={cancelRequest.isPending}
+                className="flex-1"
+              >
+                Cancel Request
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this emergency request?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  We'll stop looking for a provider for this request. If you still need help, call 911 for a safety emergency or submit a new request.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep request</AlertDialogCancel>
+                <AlertDialogAction
+                  className={buttonVariants({ variant: "destructive" })}
+                  onClick={() => cancelRequest.mutate()}
+                >
+                  Yes, cancel it
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

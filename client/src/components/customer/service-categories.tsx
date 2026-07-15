@@ -41,7 +41,8 @@ export function ServiceCategories() {
           return (
             <button
               key={category.name}
-              className="tile flex flex-col items-center gap-2 py-4 px-2 rounded-2xl text-center group"
+              type="button"
+              className="tile flex flex-col items-center gap-2 py-4 px-2 rounded-2xl text-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50"
             >
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center"

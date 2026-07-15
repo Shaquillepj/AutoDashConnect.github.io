@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { User, Wrench, ArrowRight, Zap } from "lucide-react";
+import { User, Wrench, ArrowRight, Zap, Eye, EyeOff } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,8 @@ export default function Welcome() {
     email: "", password: "", firstName: "", lastName: "", phone: "", role: "customer"
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const { login } = useUser();
   const { toast } = useToast();
 
@@ -69,7 +71,7 @@ export default function Welcome() {
         <div className="w-full max-w-sm animate-fade-in">
 
           {/* Back / branding */}
-          <button onClick={() => setSelectedRole(null)} className="flex items-center gap-2 mb-8 group">
+          <button type="button" onClick={() => setSelectedRole(null)} className="flex items-center gap-2 mb-8 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
               style={{ background: "hsl(204 70% 53% / 0.1)" }}>
               <Zap className="w-4 h-4 text-electric" />
@@ -90,12 +92,13 @@ export default function Welcome() {
           {/* Tab switcher */}
           <div className="flex gap-1 p-1 rounded-xl mb-8" style={{ background: "var(--surface-raised)" }}>
             {(["login", "register"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
+              <button key={t} type="button" onClick={() => setTab(t)}
+                aria-current={tab === t ? "true" : undefined}
                 className={[
-                  "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-150",
+                  "flex-1 py-2 text-sm font-semibold rounded-lg border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50",
                   tab === t
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-surface dark:bg-surface-overlay text-foreground border-border shadow-sm"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 ].join(" ")}>
                 {t === "login" ? "Sign in" : "Register"}
               </button>
@@ -113,9 +116,19 @@ export default function Welcome() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password" className={labelClass}>Password</Label>
-                <Input id="password" type="password" value={loginData.password}
-                  onChange={e => setLoginData(p => ({ ...p, password: e.target.value }))}
-                  className={inputClass} placeholder="••••••••" required />
+                <div className="relative">
+                  <Input id="password" type={showLoginPassword ? "text" : "password"} value={loginData.password}
+                    onChange={e => setLoginData(p => ({ ...p, password: e.target.value }))}
+                    className={`${inputClass} pr-11`} placeholder="••••••••" required />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(v => !v)}
+                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                    className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50 rounded-xl"
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" disabled={isLoading}
                 className="w-full h-11 bg-electric text-white hover:bg-electric-dim font-semibold text-sm mt-2 rounded-xl"
@@ -160,9 +173,19 @@ export default function Welcome() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="regPassword" className={labelClass}>Password</Label>
-                <Input id="regPassword" type="password" value={registerData.password}
-                  onChange={e => setRegisterData(p => ({ ...p, password: e.target.value }))}
-                  className={inputClass} placeholder="••••••••" required />
+                <div className="relative">
+                  <Input id="regPassword" type={showRegisterPassword ? "text" : "password"} value={registerData.password}
+                    onChange={e => setRegisterData(p => ({ ...p, password: e.target.value }))}
+                    className={`${inputClass} pr-11`} placeholder="••••••••" required />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(v => !v)}
+                    aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                    className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50 rounded-xl"
+                  >
+                    {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" disabled={isLoading}
                 className="w-full h-11 bg-electric text-white hover:bg-electric-dim font-semibold text-sm mt-2 rounded-xl"
@@ -174,8 +197,8 @@ export default function Welcome() {
             </form>
           )}
 
-          <button onClick={() => setSelectedRole(null)}
-            className="mt-8 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <button type="button" onClick={() => setSelectedRole(null)}
+            className="mt-8 text-xs text-muted-foreground hover:text-foreground transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50">
             ← Back to role selection
           </button>
         </div>
@@ -209,8 +232,8 @@ export default function Welcome() {
             { role: 'customer', icon: User,   title: 'I need help',        sub: 'Request roadside or auto services' },
             { role: 'provider', icon: Wrench, title: 'I provide services', sub: 'Grow your mobile service business'  },
           ].map(({ role, icon: Icon, title, sub }) => (
-            <button key={role} onClick={() => handleRoleSelect(role)}
-              className="w-full group flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-200 bg-surface-raised hover:bg-surface-overlay"
+            <button key={role} type="button" onClick={() => handleRoleSelect(role)}
+              className="w-full group flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-200 bg-surface-raised hover:bg-surface-overlay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50"
               style={{ boxShadow: "var(--shadow-xs)" }}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = 'var(--shadow-md)')}
               onMouseLeave={e => (e.currentTarget.style.boxShadow = 'var(--shadow-xs)')}>

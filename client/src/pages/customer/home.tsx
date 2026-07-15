@@ -19,20 +19,11 @@ export default function CustomerHome() {
   const [date, setDate] = useState("");
 
   const { data: providers, isLoading: providersLoading } = useQuery<ServiceProvider[]>({
-    queryKey: ['/api/providers'],
-    queryFn: async () => {
-      const response = await fetch('/api/providers?lat=40.7128&lng=-74.0060&radius=25');
-      return response.json();
-    }
+    queryKey: ['/api/providers?lat=40.7128&lng=-74.0060&radius=25'],
   });
 
   const { data: recentBookings, isLoading: bookingsLoading } = useQuery<Booking[]>({
     queryKey: ['/api/bookings/customer', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const response = await fetch(`/api/bookings/customer/${user.id}`);
-      return response.json();
-    },
     enabled: !!user?.id
   });
 
@@ -50,12 +41,12 @@ export default function CustomerHome() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 mobile-bottom-nav-spacing">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 mobile-bottom-nav-spacing">
 
         {/* Greeting */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">
-            Hey{user?.firstName ? `, ${user.firstName}` : ""} 👋
+            Welcome back{user?.firstName ? `, ${user.firstName}` : ""}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">What do you need today?</p>
         </div>
@@ -110,6 +101,7 @@ export default function CustomerHome() {
               />
             </div>
             <Button
+              aria-label="Search"
               className="h-12 px-5 rounded-2xl bg-electric text-white hover:bg-electric-dim font-semibold shrink-0"
               style={{ boxShadow: "var(--shadow-glow)" }}
             >
@@ -125,7 +117,7 @@ export default function CustomerHome() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-foreground">Top-Rated Providers</h2>
-            <button className="text-sm font-semibold text-electric">View all</button>
+            <button type="button" className="text-sm link-electric">View all</button>
           </div>
 
           {providersLoading ? (
@@ -201,7 +193,7 @@ export default function CustomerHome() {
                   </div>
                 ))}
                 <div className="px-5 py-3 border-t border-border">
-                  <button className="text-sm font-semibold text-electric">View all bookings</button>
+                  <button type="button" className="text-sm link-electric">View all bookings</button>
                 </div>
               </>
             ) : (

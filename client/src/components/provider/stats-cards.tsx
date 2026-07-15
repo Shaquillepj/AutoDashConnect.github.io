@@ -25,16 +25,13 @@ export function StatsCards({ bookings, provider }: StatsCardsProps) {
   const totalBookings = bookings.length;
   const completionRate = totalBookings > 0 ? Math.round((completedBookings / totalBookings) * 100) : 0;
 
-  const yesterdaysRevenue = 435;
-  const revenueChange = todaysRevenue > yesterdaysRevenue
-    ? `+${Math.round(((todaysRevenue - yesterdaysRevenue) / yesterdaysRevenue) * 100)}%`
-    : `${Math.round(((todaysRevenue - yesterdaysRevenue) / yesterdaysRevenue) * 100)}%`;
+  const completedTodayCount = todaysBookings.filter(booking => booking.status === 'completed').length;
 
   const stats = [
     {
       label: "Today's Revenue",
       value: `$${todaysRevenue.toFixed(0)}`,
-      sub: `${revenueChange} from yesterday`,
+      sub: `${completedTodayCount} completed today`,
       subColor: "hsl(142 60% 35%)",
       iconClass: "stats-icon-revenue",
       Icon: DollarSign,

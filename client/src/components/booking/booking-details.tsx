@@ -75,7 +75,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
       {/* Service Location */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
             <MapPin className="w-5 h-5 mr-2" />
             Service Location
           </h2>
@@ -89,7 +89,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
                 placeholder="Enter your complete address"
                 required
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Our technician will come to this location for your service
               </p>
             </div>
@@ -100,7 +100,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
       {/* Vehicle Information */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <Car className="w-5 h-5 mr-2" />
             Vehicle Information
           </h3>
@@ -189,7 +189,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
       {/* Additional Notes */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Additional Notes</h3>
           <div>
             <Label htmlFor="notes">Special Instructions or Requests</Label>
             <Textarea
@@ -199,7 +199,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
               placeholder="Any special instructions, access codes, or specific areas of concern..."
               rows={4}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Help us provide the best service by sharing any relevant details
             </p>
           </div>
@@ -218,7 +218,7 @@ export function BookingDetails({ onComplete }: BookingDetailsProps) {
         <Button
           onClick={handleContinue}
           disabled={!address || !vehicleInfo.make || !vehicleInfo.model || !vehicleInfo.year}
-          className="flex-1 bg-blue-600 hover:bg-blue-700"
+          className="flex-1 bg-electric text-white hover:bg-electric-dim"
         >
           Continue to Payment
         </Button>

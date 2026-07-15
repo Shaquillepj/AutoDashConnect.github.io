@@ -26,7 +26,7 @@ export function BottomNav() {
   const navItems = isCustomer ? customerNavItems : providerNavItems;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border md:hidden"
+    <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border md:hidden"
       style={{ boxShadow: "0 -1px 8px hsl(220 14% 50% / 0.08)" }}>
       <div className="grid grid-cols-5 py-1 px-2">
         {navItems.map((item) => {
@@ -36,8 +36,10 @@ export function BottomNav() {
           return (
             <button
               key={item.path}
+              type="button"
               onClick={() => setLocation(item.path)}
-              className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-colors"
+              aria-current={isActive ? "page" : undefined}
+              className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric/50"
             >
               <div className={[
                 "w-8 h-8 flex items-center justify-center rounded-xl transition-all",

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Clock, MapPin, Car, User } from "lucide-react";
-import { Booking } from "@shared/schema";
+import { Booking, Location, VehicleInfo } from "@shared/schema";
 
 interface ScheduleItemProps {
   booking: Booking;
@@ -10,6 +10,8 @@ interface ScheduleItemProps {
 
 export function ScheduleItem({ booking, isLast = false, showDate = true }: ScheduleItemProps) {
   const scheduledTime = new Date(booking.scheduledAt);
+  const vehicle = booking.vehicleInfo as VehicleInfo | null;
+  const location = booking.customerLocation as Location | null;
 
   const statusClass = (status: string) => {
     switch (status) {
@@ -60,16 +62,16 @@ export function ScheduleItem({ booking, isLast = false, showDate = true }: Sched
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> Customer</span>
-              {booking.vehicleInfo && (
+              {vehicle && (
                 <span className="flex items-center gap-1">
                   <Car className="w-3.5 h-3.5" />
-                  {(booking.vehicleInfo as any).year} {(booking.vehicleInfo as any).make} {(booking.vehicleInfo as any).model}
+                  {vehicle.year} {vehicle.make} {vehicle.model}
                 </span>
               )}
-              {booking.customerLocation && (
+              {location && (
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" />
-                  {(booking.customerLocation as any).address}
+                  {location.address}
                 </span>
               )}
             </div>

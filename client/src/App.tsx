@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -5,16 +6,24 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUser } from "@/hooks/use-user";
 
-import Welcome from "@/pages/welcome";
-import CustomerHome from "@/pages/customer/home";
-import BookingFlow from "@/pages/customer/booking-flow";
-import CustomerAppointments from "@/pages/customer/appointments";
-import EmergencyBooking from "@/pages/customer/emergency-booking";
-import EmergencyTracking from "@/pages/customer/emergency-tracking";
-import ProviderDashboard from "@/pages/provider/dashboard";
-import ProviderServices from "@/pages/provider/services";
-import ProviderSchedule from "@/pages/provider/schedule";
-import NotFound from "@/pages/not-found";
+const Welcome = lazy(() => import("@/pages/welcome"));
+const CustomerHome = lazy(() => import("@/pages/customer/home"));
+const BookingFlow = lazy(() => import("@/pages/customer/booking-flow"));
+const CustomerAppointments = lazy(() => import("@/pages/customer/appointments"));
+const EmergencyBooking = lazy(() => import("@/pages/customer/emergency-booking"));
+const EmergencyTracking = lazy(() => import("@/pages/customer/emergency-tracking"));
+const ProviderDashboard = lazy(() => import("@/pages/provider/dashboard"));
+const ProviderServices = lazy(() => import("@/pages/provider/services"));
+const ProviderSchedule = lazy(() => import("@/pages/provider/schedule"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 rounded-full border-2 border-electric border-t-transparent animate-spin" aria-label="Loading" />
+    </div>
+  );
+}
 
 function Router() {
   const { isAuthenticated, isCustomer, isProvider } = useUser();
@@ -52,7 +61,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <Suspense fallback={<RouteFallback />}>
+          <Router />
+        </Suspense>
       </TooltipProvider>
     </QueryClientProvider>
   );

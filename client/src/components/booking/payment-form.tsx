@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Lock, Calendar, MapPin, Car } from "lucide-react";
+import { CreditCard, Info, Calendar, MapPin, Car } from "lucide-react";
 import { Service, AddOnService } from "@shared/schema";
+import type { BookingData } from "@/pages/customer/booking-flow";
 
 interface PaymentFormProps {
-  bookingData: any;
+  bookingData: BookingData;
   service?: Service;
   addOns: AddOnService[];
   onComplete: () => void;
@@ -100,16 +101,16 @@ export function PaymentForm({
       {/* Booking Summary */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Booking Summary</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">Booking Summary</h2>
           <div className="space-y-4">
             {/* Service Details */}
             {service && (
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                  <p className="text-sm text-gray-600">{service.description}</p>
+                  <h3 className="font-semibold text-foreground">{service.name}</h3>
+                  <p className="text-sm text-muted-foreground">{service.description}</p>
                 </div>
-                <span className="font-medium text-gray-900">${service.basePrice}</span>
+                <span className="font-medium text-foreground">${service.basePrice}</span>
               </div>
             )}
 
@@ -117,10 +118,10 @@ export function PaymentForm({
             {addOns.map((addOn) => (
               <div key={addOn.id} className="flex justify-between items-start">
                 <div>
-                  <h4 className="font-medium text-gray-900">{addOn.name}</h4>
-                  <p className="text-sm text-gray-600">{addOn.description}</p>
+                  <h4 className="font-medium text-foreground">{addOn.name}</h4>
+                  <p className="text-sm text-muted-foreground">{addOn.description}</p>
                 </div>
-                <span className="font-medium text-gray-900">${addOn.price}</span>
+                <span className="font-medium text-foreground">${addOn.price}</span>
               </div>
             ))}
 
@@ -128,7 +129,7 @@ export function PaymentForm({
 
             {/* Date and Time */}
             {bookingData.scheduledAt && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 <span>
                   {new Date(bookingData.scheduledAt).toLocaleDateString('en-US', {
@@ -147,7 +148,7 @@ export function PaymentForm({
 
             {/* Location */}
             {bookingData.customerLocation && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 <span>{bookingData.customerLocation.address}</span>
               </div>
@@ -155,7 +156,7 @@ export function PaymentForm({
 
             {/* Vehicle */}
             {bookingData.vehicleInfo && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Car className="w-4 h-4" />
                 <span>
                   {bookingData.vehicleInfo.year} {bookingData.vehicleInfo.make} {bookingData.vehicleInfo.model}
@@ -170,7 +171,7 @@ export function PaymentForm({
       {/* Payment Information */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <CreditCard className="w-5 h-5 mr-2" />
             Payment Information
           </h3>
@@ -236,10 +237,10 @@ export function PaymentForm({
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <div className="flex items-center space-x-2 text-sm text-blue-800">
-              <Lock className="w-4 h-4" />
-              <span>Your payment information is secure and encrypted</span>
+          <div className="mt-6 p-4 tile rounded-lg">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Info className="w-4 h-4" />
+              <span>This is a demo checkout — no payment is actually processed or stored.</span>
             </div>
           </div>
         </CardContent>
@@ -248,14 +249,14 @@ export function PaymentForm({
       {/* Payment Summary */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Summary</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Payment Summary</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal</span>
+              <span className="text-muted-foreground">Subtotal</span>
               <span className="font-medium">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Service Fee</span>
+              <span className="text-muted-foreground">Service Fee</span>
               <span className="font-medium">${serviceFee.toFixed(2)}</span>
             </div>
             <Separator />

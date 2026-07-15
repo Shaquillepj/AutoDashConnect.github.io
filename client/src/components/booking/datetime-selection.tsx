@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar as CalendarIcon } from "lucide-react";
 import { Service } from "@shared/schema";
+import { formatDuration } from "@/lib/utils";
 
 interface DateTimeSelectionProps {
   service?: Service;
@@ -53,28 +54,22 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
     return date >= today;
   };
 
-  const getNextAvailableDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow;
-  };
-
   return (
     <div className="space-y-6">
       {/* Service Summary */}
       {service && (
-        <Card className="bg-blue-50">
+        <Card style={{ background: "var(--electric-glow)" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                <p className="text-sm text-gray-600 flex items-center">
+                <h3 className="font-semibold text-foreground">{service.name}</h3>
+                <p className="text-sm text-muted-foreground flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
-                  Estimated {Math.round(service.duration / 60)} hour{service.duration >= 120 ? 's' : ''}
+                  Estimated {formatDuration(service.duration)}
                 </p>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900">${service.basePrice}</div>
+                <div className="font-bold text-foreground">${service.basePrice}</div>
               </div>
             </div>
           </CardContent>
@@ -84,7 +79,7 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
       {/* Date Selection */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center">
             <CalendarIcon className="w-5 h-5 mr-2" />
             Select Date
           </h2>
@@ -117,7 +112,7 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
       {selectedDate && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
               <Clock className="w-5 h-5 mr-2" />
               Select Time
             </h3>
@@ -127,7 +122,7 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
                   key={slot.value}
                   variant={selectedTime === slot.value ? "default" : "outline"}
                   onClick={() => setSelectedTime(slot.value)}
-                  className={`text-sm ${selectedTime === slot.value ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                  className={`text-sm ${selectedTime === slot.value ? 'bg-electric text-white hover:bg-electric-dim' : ''}`}
                 >
                   {slot.display}
                 </Button>
@@ -146,10 +141,10 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
 
       {/* Booking Summary */}
       {selectedDate && selectedTime && (
-        <Card className="bg-green-50">
+        <Card style={{ background: "hsl(142 60% 40% / 0.08)" }}>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Appointment Summary</h3>
-            <div className="space-y-2 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Appointment Summary</h3>
+            <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <span>Date:</span>
                 <span className="font-medium">
@@ -171,7 +166,7 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
                 <div className="flex justify-between">
                   <span>Duration:</span>
                   <span className="font-medium">
-                    {Math.round(service.duration / 60)} hour{service.duration >= 120 ? 's' : ''}
+                    {formatDuration(service.duration)}
                   </span>
                 </div>
               )}
@@ -192,7 +187,7 @@ export function DateTimeSelection({ service, onComplete }: DateTimeSelectionProp
         <Button
           onClick={handleContinue}
           disabled={!selectedDate || !selectedTime}
-          className="flex-1 bg-blue-600 hover:bg-blue-700"
+          className="flex-1 bg-electric text-white hover:bg-electric-dim"
         >
           Continue to Details
         </Button>

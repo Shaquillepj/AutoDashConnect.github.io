@@ -1,18 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/navigation/header";
 import { StatsCards } from "@/components/provider/stats-cards";
 import { ScheduleItem } from "@/components/provider/schedule-item";
+import { OnboardingForm } from "@/components/provider/onboarding-form";
 import { useUser } from "@/hooks/use-user";
 import { Plus, Package, Star } from "lucide-react";
 import { ServiceProvider, Booking, Service, Inventory, Review } from "@shared/schema";
 
 export default function ProviderDashboard() {
   const { user } = useUser();
+  const [, setLocation] = useLocation();
 
-  const { data: provider, isLoading: providerLoading } = useQuery<ServiceProvider>({
+  const { data: provider, isLoading: providerLoading, isError: providerError } = useQuery<ServiceProvider>({
     queryKey: ['/api/providers/user', user?.id],
     enabled: !!user?.id
   });
@@ -45,7 +48,7 @@ export default function ProviderDashboard() {
 
   const getInventoryStatus = (item: Inventory) => {
     if (item.currentStock === 0) return { color: 'hsl(0 65% 50%)' };
-    if (item.currentStock <= item.minStock) return { color: 'hsl(43 80% 38%)' };
+    if (item.minStock != null && item.currentStock <= item.minStock) return { color: 'hsl(43 80% 38%)' };
     return { color: 'hsl(142 60% 35%)' };
   };
 
@@ -64,11 +67,15 @@ export default function ProviderDashboard() {
     );
   }
 
+  if ((providerError || !provider) && user?.id) {
+    return <OnboardingForm userId={user.id} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header row */}
         <div className="flex items-center justify-between mb-6">
@@ -78,7 +85,9 @@ export default function ProviderDashboard() {
               Welcome back, <span className="font-semibold text-foreground">{provider?.businessName}</span>
             </p>
           </div>
-          <Button className="rounded-xl bg-electric text-white hover:bg-electric-dim font-semibold"
+          <Button
+            onClick={() => setLocation('/services')}
+            className="rounded-xl bg-electric text-white hover:bg-electric-dim font-semibold"
             style={{ boxShadow: "var(--shadow-glow)" }}>
             <Plus className="w-4 h-4 mr-2" />
             Add Service
@@ -115,7 +124,7 @@ export default function ProviderDashboard() {
                   />
                 ))}
                 <div className="px-5 py-3 border-t border-border">
-                  <button className="text-sm font-semibold text-electric">View full schedule</button>
+                  <button type="button" className="text-sm link-electric" onClick={() => setLocation('/schedule')}>View full schedule</button>
                 </div>
               </>
             ) : (
@@ -149,13 +158,12 @@ export default function ProviderDashboard() {
                       </div>
                       <div className="text-right ml-3 shrink-0">
                         <p className="font-bold text-foreground text-sm">${service.basePrice}</p>
-                        <button className="text-xs font-semibold text-electric">Edit</button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <Button className="w-full mt-4 rounded-xl bg-electric text-white hover:bg-electric-dim font-semibold">
+              <Button onClick={() => setLocation('/services')} className="w-full mt-4 rounded-xl bg-electric text-white hover:bg-electric-dim font-semibold">
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Service
               </Button>
@@ -180,7 +188,7 @@ export default function ProviderDashboard() {
                 <div className="space-y-3">
                   {inventory?.map((item) => {
                     const { color } = getInventoryStatus(item);
-                    const isLow = item.currentStock <= item.minStock;
+                    const isLow = item.minStock != null && item.currentStock <= item.minStock;
                     const isOut = item.currentStock === 0;
                     return (
                       <div key={item.id} className="flex items-center justify-between">
@@ -197,9 +205,9 @@ export default function ProviderDashboard() {
                   })}
                 </div>
               )}
-              <Button variant="outline" className="w-full mt-4 rounded-xl border-border font-semibold">
+              <Button variant="outline" disabled className="w-full mt-4 rounded-xl border-border font-semibold">
                 <Package className="w-4 h-4 mr-2" />
-                Manage Inventory
+                Manage Inventory (coming soon)
               </Button>
             </CardContent>
           </Card>
@@ -235,16 +243,19 @@ export default function ProviderDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-foreground">Customer</span>
-                        <div className="flex items-center gap-0.5">
+                        <div className="flex items-center gap-0.5" aria-label={`${review.rating} out of 5 stars`}>
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star key={i}
+                              aria-hidden="true"
                               className={`w-3.5 h-3.5 ${i < review.rating ? 'text-amber-400 fill-amber-400' : 'text-border'}`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </span>
+                        {review.createdAt && (
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                       {review.comment && (
                         <p className="text-sm text-muted-foreground">{review.comment}</p>

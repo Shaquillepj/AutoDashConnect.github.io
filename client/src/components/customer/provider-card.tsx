@@ -24,10 +24,14 @@ export function ProviderCard({ provider }: ProviderCardProps) {
         <img
           src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"
           alt="Professional auto service"
+          width={400}
+          height={176}
+          loading="lazy"
+          decoding="async"
           className="w-full h-44 object-cover group-hover:scale-[1.02] transition-transform duration-300"
         />
         <div className="absolute top-3 right-3">
-          <Badge className="text-[10px] font-semibold bg-white/90 text-foreground border-0 shadow-sm px-2.5 py-0.5">
+          <Badge className="text-[10px] font-semibold bg-white/90 text-zinc-900 border-0 shadow-sm px-2.5 py-0.5">
             Mobile Service
           </Badge>
         </div>

@@ -17,6 +17,7 @@ import {
   type InsertEmergencyRequest
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // Users
@@ -54,6 +55,7 @@ export interface IStorage {
   createReview(review: InsertReview): Promise<Review>;
 
   // Inventory
+  getInventoryItem(id: string): Promise<Inventory | undefined>;
   getInventoryByProviderId(providerId: string): Promise<Inventory[]>;
   createInventoryItem(item: InsertInventory): Promise<Inventory>;
   updateInventoryItem(id: string, updates: Partial<Inventory>): Promise<Inventory | undefined>;
@@ -83,11 +85,14 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
+    // Demo accounts — password for both is "password123"
+    const demoPasswordHash = bcrypt.hashSync("password123", 10);
+
     // Create sample users
     const customer = {
       id: randomUUID(),
       email: "john.doe@example.com",
-      password: "hashedpassword",
+      password: demoPasswordHash,
       firstName: "John",
       lastName: "Doe",
       phone: "+1234567890",
@@ -99,7 +104,7 @@ export class MemStorage implements IStorage {
     const providerUser = {
       id: randomUUID(),
       email: "elite@autodetailing.com",
-      password: "hashedpassword",
+      password: demoPasswordHash,
       firstName: "Mike",
       lastName: "Johnson",
       phone: "+1234567891",
@@ -108,8 +113,22 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
 
+    // Seeded admin account — admins are provisioned, not self-registered via the app.
+    const adminUser = {
+      id: randomUUID(),
+      email: "admin@autodashconnect.com",
+      password: demoPasswordHash,
+      firstName: "Admin",
+      lastName: "User",
+      phone: null,
+      role: "admin",
+      rewardPoints: 0,
+      createdAt: new Date(),
+    };
+
     this.users.set(customer.id, customer);
     this.users.set(providerUser.id, providerUser);
+    this.users.set(adminUser.id, adminUser);
 
     // Create sample service provider
     const provider = {
@@ -255,11 +274,11 @@ export class MemStorage implements IStorage {
       ...provider,
       id,
       description: provider.description ?? null,
-      serviceRadius: provider.serviceRadius ?? null,
-      rating: provider.rating ?? null,
-      reviewCount: provider.reviewCount ?? null,
-      isActive: provider.isActive ?? null,
-      isAvailable: provider.isAvailable ?? null,
+      serviceRadius: provider.serviceRadius ?? 25,
+      rating: provider.rating ?? "0.00",
+      reviewCount: provider.reviewCount ?? 0,
+      isActive: provider.isActive ?? true,
+      isAvailable: provider.isAvailable ?? true,
       isVerified: provider.isVerified ?? false,
       verifiedAt: provider.verifiedAt ?? null,
       businessLicense: provider.businessLicense ?? null,
@@ -391,6 +410,10 @@ export class MemStorage implements IStorage {
   }
 
   // Inventory
+  async getInventoryItem(id: string): Promise<Inventory | undefined> {
+    return this.inventory.get(id);
+  }
+
   async getInventoryByProviderId(providerId: string): Promise<Inventory[]> {
     return Array.from(this.inventory.values()).filter(i => i.providerId === providerId);
   }

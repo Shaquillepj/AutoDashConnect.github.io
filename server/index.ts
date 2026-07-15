@@ -1,10 +1,34 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import createMemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+const MemoryStore = createMemoryStore(session);
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+if (!process.env.SESSION_SECRET) {
+  if (app.get("env") === "production") {
+    throw new Error("SESSION_SECRET must be set in production — refusing to start with an insecure default.");
+  }
+  log("WARNING: SESSION_SECRET is not set — using an insecure development-only default. Set SESSION_SECRET before deploying.");
+}
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "dev-only-insecure-session-secret",
+  resave: false,
+  saveUninitialized: false,
+  store: new MemoryStore({ checkPeriod: 86400000 }),
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: app.get("env") === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -36,6 +60,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -44,7 +72,6 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after

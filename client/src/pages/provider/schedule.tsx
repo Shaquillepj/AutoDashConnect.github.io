@@ -63,39 +63,39 @@ export default function ProviderSchedule() {
   const stats = getStatusStats();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule</h1>
-          <p className="text-gray-600">Manage your appointments and availability</p>
+          <h1 className="text-2xl font-bold text-foreground">Schedule</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage your appointments and availability</p>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-sm text-gray-600">Today's Total</div>
+              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-sm text-muted-foreground">Today's Total</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-600">Pending</div>
+              <div className="text-2xl font-bold text-amber-500">{stats.pending}</div>
+              <div className="text-sm text-muted-foreground">Pending</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.confirmed}</div>
-              <div className="text-sm text-gray-600">Confirmed</div>
+              <div className="text-2xl font-bold text-electric">{stats.confirmed}</div>
+              <div className="text-sm text-muted-foreground">Confirmed</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-              <div className="text-sm text-gray-600">Completed</div>
+              <div className="text-2xl font-bold text-emerald-500">{stats.completed}</div>
+              <div className="text-sm text-muted-foreground">Completed</div>
             </CardContent>
           </Card>
         </div>
@@ -119,9 +119,9 @@ export default function ProviderSchedule() {
                   hasBookings: (date) => getDateBookingCount(date) > 0
                 }}
                 modifiersStyles={{
-                  hasBookings: { 
-                    backgroundColor: '#dbeafe',
-                    color: '#1e40af',
+                  hasBookings: {
+                    backgroundColor: "var(--electric-glow)",
+                    color: "var(--electric)",
                     fontWeight: 'bold'
                   }
                 }}
@@ -188,11 +188,11 @@ export default function ProviderSchedule() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments scheduled</h3>
-                  <p className="text-gray-600">
-                    {selectedDate.toDateString() === new Date().toDateString() 
-                      ? "You have no appointments today" 
+                  <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No appointments scheduled</h3>
+                  <p className="text-muted-foreground">
+                    {selectedDate.toDateString() === new Date().toDateString()
+                      ? "You have no appointments today"
                       : "No appointments scheduled for this date"}
                   </p>
                 </div>

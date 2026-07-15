@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User } from "@shared/schema";
 import { auth } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(auth.getCurrentUser());
@@ -25,6 +26,7 @@ export function useUser() {
   const logout = () => {
     auth.logout();
     setUser(null);
+    apiRequest('POST', '/api/auth/logout').catch(() => {});
   };
 
   return {

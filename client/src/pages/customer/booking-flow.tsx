@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { Service, AddOnService, ServiceProvider } from "@shared/schema";
 
 type BookingStep = 'service' | 'datetime' | 'details' | 'payment';
 
-interface BookingData {
+export interface BookingData {
   serviceId: string;
   addOnIds: string[];
   scheduledAt: Date | null;
@@ -36,13 +36,14 @@ interface BookingData {
 }
 
 export default function BookingFlow() {
-  const [match] = useRoute("/booking/:providerId/:serviceId");
+  const [match, params] = useRoute("/customer/booking/:providerId/:serviceId");
   const { user } = useUser();
   const { toast } = useToast();
-  
+  const [, setLocation] = useLocation();
+
   const [currentStep, setCurrentStep] = useState<BookingStep>('service');
   const [bookingData, setBookingData] = useState<BookingData>({
-    serviceId: match?.params.serviceId || '',
+    serviceId: params?.serviceId || '',
     addOnIds: [],
     scheduledAt: null,
     customerLocation: null,
@@ -52,13 +53,13 @@ export default function BookingFlow() {
   });
 
   const { data: provider } = useQuery<ServiceProvider>({
-    queryKey: ['/api/providers', match?.params.providerId],
-    enabled: !!match?.params.providerId
+    queryKey: ['/api/providers', params?.providerId],
+    enabled: !!params?.providerId
   });
 
   const { data: services } = useQuery<Service[]>({
-    queryKey: ['/api/providers', match?.params.providerId, 'services'],
-    enabled: !!match?.params.providerId
+    queryKey: ['/api/providers', params?.providerId, 'services'],
+    enabled: !!params?.providerId
   });
 
   const { data: addOns } = useQuery<AddOnService[]>({
@@ -77,8 +78,7 @@ export default function BookingFlow() {
         title: "Booking confirmed!",
         description: "Your appointment has been scheduled successfully.",
       });
-      // Navigate back to home or appointments
-      window.location.href = '/';
+      setLocation('/customer/appointments');
     },
     onError: () => {
       toast({
@@ -138,15 +138,15 @@ export default function BookingFlow() {
   const selectedService = services?.find(s => s.id === bookingData.serviceId);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-surface shadow-sm border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Button variant="ghost" onClick={goBack}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-lg font-semibold text-gray-900">Book Service</h1>
+            <h1 className="text-lg font-semibold text-foreground">Book Service</h1>
             <div className="w-10"></div>
           </div>
         </div>
@@ -165,21 +165,21 @@ export default function BookingFlow() {
                 <div key={label} className="flex items-center">
                   <div className="flex items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      isActive ? 'bg-blue-600 text-white' : 
-                      isCompleted ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'
+                      isActive ? 'bg-electric text-white' :
+                      isCompleted ? 'bg-emerald-500 text-white' : 'bg-surface-overlay text-muted-foreground'
                     }`}>
                       {stepNum}
                     </div>
                     <span className={`ml-2 text-sm ${
-                      isActive ? 'font-medium text-blue-600' : 
-                      isCompleted ? 'text-green-600' : 'text-gray-500'
+                      isActive ? 'font-medium text-electric' :
+                      isCompleted ? 'text-emerald-500' : 'text-muted-foreground'
                     }`}>
                       {label}
                     </span>
                   </div>
                   {index < 3 && (
                     <div className={`w-12 h-0.5 ml-4 ${
-                      isCompleted ? 'bg-green-600' : 'bg-gray-300'
+                      isCompleted ? 'bg-emerald-500' : 'bg-surface-overlay'
                     }`} />
                   )}
                 </div>

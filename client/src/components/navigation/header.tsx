@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/hooks/use-user";
-import { Bell, Zap } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { Bell, Zap, Sun, Moon } from "lucide-react";
 
 export function Header() {
   const { user, logout, isProvider } = useUser();
+  const { theme, toggleTheme } = useTheme();
 
   return (
+    <>
+    <a href="#main-content" className="skip-link">Skip to main content</a>
     <header className="sticky top-0 z-50"
       style={{ background: "hsl(225 22% 9%)", boxShadow: "0 1px 12px rgba(0,0,0,0.18)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,12 +38,20 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="relative w-11 h-11 p-0 rounded-xl hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-electric/50 focus-visible:ring-offset-0"
+              style={{ color: "hsl(204 15% 65%)" }}>
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+
             <Button variant="ghost" size="sm"
-              className="relative w-9 h-9 p-0 rounded-xl hover:bg-white/10"
+              aria-label={isProvider ? "Notifications, 3 unread" : "Notifications"}
+              className="relative w-11 h-11 p-0 rounded-xl hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-electric/50 focus-visible:ring-offset-0"
               style={{ color: "hsl(204 15% 65%)" }}>
               <Bell className="w-4 h-4" />
               {isProvider && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
+                <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
                   style={{ background: "var(--electric)" }}>
                   3
                 </span>
@@ -53,7 +65,7 @@ export function Header() {
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <Button variant="ghost" size="sm" onClick={logout}
-                className="text-xs h-8 px-2 hover:bg-white/10"
+                className="text-xs h-8 px-2 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-electric/50 focus-visible:ring-offset-0"
                 style={{ color: "hsl(204 15% 65%)" }}>
                 Sign out
               </Button>
@@ -63,5 +75,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

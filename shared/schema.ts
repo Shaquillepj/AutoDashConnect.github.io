@@ -3,6 +3,9 @@ import { pgTable, text, varchar, decimal, timestamp, boolean, integer, jsonb } f
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export type Location = { lat: number; lng: number; address: string };
+export type VehicleInfo = { make: string; model: string; year: number; color: string; plateNumber?: string };
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -10,7 +13,7 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   phone: text("phone"),
-  role: text("role").notNull(), // 'customer' | 'provider'
+  role: text("role").notNull(), // 'customer' | 'provider' | 'admin' (admins are provisioned directly, not self-registered)
   rewardPoints: integer("reward_points").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -116,6 +119,10 @@ export const emergencyRequests = pgTable("emergency_requests", {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+}).extend({
+  // 'admin' is intentionally excluded — admin accounts are provisioned directly
+  // (see storage.ts seed data), never created through public registration.
+  role: z.enum(["customer", "provider"]),
 });
 
 export const insertServiceProviderSchema = createInsertSchema(serviceProviders).omit({
@@ -134,6 +141,9 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   createdAt: true,
   completedAt: true,
+}).extend({
+  // Sent over JSON as an ISO string (JSON has no Date type) — coerce it back to a Date.
+  scheduledAt: z.coerce.date(),
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({
